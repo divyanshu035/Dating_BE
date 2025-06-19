@@ -14,11 +14,17 @@ app.use("/admin", (req,res,next) => {
     }
 })
 app.get("/admin/getAllData", (req,res,next)=> {
+    throw new Error("Something went wrong 17");
     res.send("All Data send");
 })
 
 app.get("/admin/deleteUser", (req,res,next)=> {
     res.send("delete User");
+})
+
+app.use("/", (err,req,res,next) => {
+    if(err)
+    res.status(501).send("Something went wrong", err);
 })
 
 app.listen(3001, () => {
