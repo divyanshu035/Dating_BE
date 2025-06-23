@@ -1,32 +1,66 @@
 const express = require("express");
-
+const connectDB = require("./config/database");
 const app = express();
+const User = require("./models/user");
+const cookieParser = require("cookie-parser");
+const {authRouter} = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
 
-app.use("/admin", (req,res,next) => {
-    console.log("Admin Authorisation");
-    const token = "xyz";
-    const isAdminAuthorised = token === "xyz";
-    if(isAdminAuthorised){
-        next();
-    }
-    else {
-        res.status(401).send("Unauthorised User");
-    }
-})
-app.get("/admin/getAllData", (req,res,next)=> {
-    throw new Error("Something went wrong 17");
-    res.send("All Data send");
-})
+app.use(express.json());
+app.use(cookieParser());
 
-app.get("/admin/deleteUser", (req,res,next)=> {
-    res.send("delete User");
-})
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
-app.use("/", (err,req,res,next) => {
-    if(err)
-    res.status(501).send("Something went wrong", err);
-})
+app.get("/user", async (req, res) => {
+  const userEmail = req.body.emailId;
+  try {
+    const user = await User.find({ emailId: userEmail });
+    res.send(user);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
 
-app.listen(3001, () => {
-  console.log(`Server is running on port 3001`);
+app.get("/feed", async (req, res) => {
+  try {
+    const user = await User.find({});
+    res.send(user);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+app.delete("/user", async (req, res) => {
+  const userId = req.body.userId;
+  try {
+    const user = await User.findByIdAndDelete({ _id: userId });
+    // const user = await User.findByIdAndDelete(userId);
+    res.send(`User with id ${userId} is deleted successfully`, user);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+app.patch("/user", async (req, res) => {
+  const userId = req.body.userId;
+  const body = req.body;
+  try {
+    console.log(`in patch`, userId, body);
+    const user = await User.findByIdAndUpdate(userId, body, {
+      runValidators: true,
+    });
+    res.send(`Data updated successfully for user`, user);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+connectDB().then(() => {
+  console.log("Database connected successfully");
+  app.listen(3001, () => {
+    console.log(`Server is running on port 3001`);
+  });
 });
