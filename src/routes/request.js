@@ -1,16 +1,36 @@
 const express = require("express");
 const requestRouter = express.Router();
-// const User = require("./models/user");
-// const { validateSignUpData } = require("./utils/validation");
-// const bcrypt = require("bcrypt");
-// const cookieParser = require("cookie-parser");
-// const jwt = require("jsonwebtoken");
-const {userAuth} = require("../middlewares/auth");
 
-requestRouter.post("/sendConnectionRequest", userAuth, async(req,res) => {
-    const user = req.user;
-    console.log("sending the connection request");
-    res.send(user.firstName + "send the cinnection Request");
-})
+const { userAuth } = require("../middlewares/auth");
+const ConnectionRequestModel = require("../models/connectionRequest");
+
+requestRouter.post(
+  "/request/send/:status/:toUserId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const fromUserId = req.user._id;
+      const toUserId = req.params.toUserId;
+      const status = req.params.status;
+
+      
+
+      const connectionRequest = new ConnectionRequestModel({
+        fromUserId,
+        toUserId,
+        status,
+      });
+
+      const data = await connectionRequest.save();
+
+      res.json({
+        message: "onnection request sent!",
+        data,
+      });
+    } catch (err) {
+      res.status(400).send(err);
+    }
+  }
+);
 
 module.exports = requestRouter;
